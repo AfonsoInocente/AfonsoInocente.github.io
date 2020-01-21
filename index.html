@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+	<head>
+		<title>BEING PAID ©</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="css/util.css">
+		<link rel="stylesheet" type="text/css" href="css/main.css">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	</head>
+	<body>
+		<div class="container-contact100">
+			<div class="wrap-contact100">
+				<span class="contact100-form-title">
+					<img class="mb-4" src="https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg" alt="" width="100" height="100">
+					<h1>BEING PAID ©</h1>
+				</span>
+
+				<div id="divRenavam">
+					<div class="wrap-input100 validate-input bg1" data-validate="Digite o número do Renavam">
+						<span class="label-input100">NÚMERO DO RENAVAM *</span>
+						<input id="inputRenavam" class="input100" type="text" name="name" placeholder="Número do Renavam">
+					</div>
+
+					<div class="w-full dis-none js-show-service">
+						fon
+					</div>
+
+					<div class="container-contact100-form-btn">
+						<button class="contact100-form-btn" id="btnRenavam">
+							<span>
+								Avançar
+								<i class="fa fa-long-arrow-right m-l-7" aria-hidden="true"></i>
+							</span>
+						</button>
+					</div>
+				</div>
+
+				<div id="divDebitos">
+					<table class="table" style="background-color:#ccc;">
+						<thead class="thead-dark">
+							<tr>
+								<th scope="col" colspan="3" class="columnTable singleColumn" style="font-size:25px;">DÉBITOS</th>
+							</tr>
+							<tr>
+								<th scope="col" width="33%" class="columnTable columnHead">LICENCIAMENTO</th>
+								<th scope="col" width="33%" class="columnTable columnHead">IPVA</th>
+								<th scope="col" width="33%" class="columnTable columnHead">TOTAL</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr style="border:none;">
+								<td class="columnTable price" id="valLicenciamento"></td>
+								<td class="columnTable price" id="valIpva"></td>
+								<td class="columnTable price" id="valTotal"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div id="divParcelas" style="position:relative; display: block; overflow: auto;"></div>
+
+				<div id="divSelecionado">
+					<span class="contact100-form-title" id="textoSelecionado"></span>
+				</div>
+			</div>
+		</div>
+		
+		<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
+		<script>
+			$(document).ready(
+				function() 
+				{
+					$("#divDebitos").hide();
+					$("#divLoading").hide();
+
+					$('#btnRenavam').click(
+						function()
+						{
+							if($("#inputRenavam").val().length < 9)
+							{
+								alert("O Campo 'Renavam' deve conter ao menos 9 digitos.");
+								return false;
+							}
+
+							$("#divRenavam").hide();
+							$("#divDebitos").slideDown();
+
+							var licenciamento = parseFloat($('#inputRenavam').val().slice(0,3));
+							var ipva = parseFloat($('#inputRenavam').val().substr($('#inputRenavam').val().length-4));
+							var total = licenciamento + ipva;
+
+							$('#valLicenciamento').text("R$"+licenciamento.toFixed(2).replace(".", ","));
+							$('#valIpva').text("R$"+ipva.toFixed(2).replace(".", ","));
+							$('#valTotal').text("R$"+total.toFixed(2).replace(".", ","));
+
+							var opc1_juros = total * 0.04;
+							var opc2_juros = total * 0.035;
+							var opc3_juros = total * 0.03;
+							
+							$('#divParcelas').html('');
+							for (i = 1; i <= 12; i++) 
+							{
+								var valueDiv = 0;
+								if( i <= 4)
+									valueDiv = (total/i + opc1_juros).toFixed(2);
+								else if( i <= 8)
+									valueDiv = (total/i + opc2_juros).toFixed(2);
+								else
+									valueDiv = (total/i + opc3_juros).toFixed(2);
+
+								var htmlDiv = '';
+								htmlDiv += "<div class='col-md-4 caixa-parcela'>";
+									htmlDiv += "<div class='row'>";
+										htmlDiv += "<div class='col-md-11 parcelas' onclick='mostrarEscolha(this)' id='parcela"+i+"' parcel='"+i+"' price='"+(valueDiv)+"'>";
+											htmlDiv += (i)+"x R$"+valueDiv.replace(".", ",");
+										htmlDiv += "</div>";
+									htmlDiv += "</div>";
+								htmlDiv += "</div>";
+
+								$('#divParcelas').html($('#divParcelas').html() + htmlDiv);
+							}
+						}
+					);
+				
+					jQuery(
+						function($)
+						{
+							$(document).on('keyup', 'input#inputRenavam', 
+								function(e) 
+								{
+									var square = document.getElementById("inputRenavam");
+									var key = (window.event) ? event.keyCode : e.which;
+									if(key != 13) document.getElementById("inputRenavam").value = document.getElementById("inputRenavam").value.replace(/[^0-9]/g, '');
+									if((key > 47 && key < 58) || key == 13)
+									{
+										if(key == 13) 
+										{
+											if(!($("#btnRenavam").prop('disabled')))
+											{
+												$("#btnRenavam").click();
+											}
+										}
+										return true;
+									}else{
+										return (key == 8 || key == 0) ? true : false;
+									}
+								}
+							);
+						}
+					);
+				}
+			);
+			
+			function mostrarEscolha(input)
+			{
+				var value = parseFloat($(input).attr('price'));
+				var parcel = $(input).attr('parcel');
+				var totalSelected = parcel * value;
+			
+				var frase = '';
+				if(parcel == 1)
+					frase = parcel+ ' parcela';
+				else
+					frase = parcel+ ' parcelas';
+			
+				alert("Você selecionou "+frase+" de R$"+value.toFixed(2).replace(".", ",")+" reais cada, no Total de R$"+totalSelected.toFixed(2).replace(".", ",")+".");
+
+				$("#textoSelecionado").text("Você selecionou "+frase+" de R$"+value.toFixed(2).replace(".", ",")+" reais cada, no Total de R$"+totalSelected.toFixed(2).replace(".", ",")+".");
+			}
+		</script>
+	</body>
+</html>
